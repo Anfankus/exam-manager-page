@@ -5,7 +5,7 @@
         <b-form-row>
             <b-col lg=6 md=10 sm=12 tag="form" class="border center rounded shadow p-3" @submit="onSubmit">
                 <b-form-group label="用户名:" class="mt-2" label-for="usn">
-                    <b-form-input id='usn' required v-model="form.username" type="text" placeholder="输入用户名,以字母开头"/>
+                    <b-form-input id='usn' required v-model="form.userid" type="text" placeholder="输入用户名,以字母开头"/>
                 </b-form-group>
                 <b-form-group label="密码:" label-for="pwd">
                     <b-form-input id='pwd' required v-model="form.password" type="password" placeholder="请输入密码"/>
@@ -35,34 +35,41 @@ export default {
     data(){
         return{
             form:{
-                username:'',
+                userid:'',
                 password:''
             },
             result:null
         }
     },
     methods:{
-        checkFormat(){
-          let rule1=/^[a-zA-Z]+\w*$/,rule2=/^\w+$/;
-          let res=rule1.test(this.form.username)&&rule2.test(this.form.password);
-          if(res){
-              return true;
-          }else{
-              return false;
-          }
-        },
         async onSubmit(evt){
             this.result=null;
             evt.preventDefault();
-            if(!this.checkFormat()){
-              this.result={
-                ret:false,
-                msg:'用户名或密码格式有误'
-              }
-              return;
+            try{
+                let ret = await this.axios.get("/signin",{
+                    params:{
+                        userid:this.form.userid,
+                        password:this.form.password
+                    }
+                })
+                console.log(ret.data);
+                if(!ret.data.success){
+                    this.result={
+                        ret:false,
+                        msg:ret.data.msg
+                    }
+                    return
+                }
+                Cookies.set('userid',this.form.userid,{path:'/'});
+                Cookies.set('usertype',ret.data.usertype,{path:'/'});
+                Cookies.set('username',ret.data.username,{path:'/'});
+
+            }catch(ex){
+                console.log(ex);
+                return
             }
-            Cookies.set('user',this.form.username,{path:'/'});
-            location.replace('/')
+            this.$emit("signin");
+            this.$router.push({name:"select"})
         }
     }
 }

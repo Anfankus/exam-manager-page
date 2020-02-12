@@ -21,6 +21,9 @@
                 <b-form-group label-cols="1" label="总分" :label-for="`QSelectScore${index}`" label-align="left" >
                     <b-form-input :id="`QSelectScore${index}`" v-model="selective.maxscore" type="number" number style="width:20%" />
                 </b-form-group>
+                <b-form-group label-cols="1" label="答案" :label-for="`QSelectScore${index}`" label-align="left" >
+                    <b-form-input :id="`QSelectScore${index}`" v-model="selective.answer" style="width:20%" />
+                </b-form-group>
             </b-col>
             <b-col cols="2" >
                 <b-btn block variant="success" class="confirm-btn" @click="addOption" ><b-icon icon="plus"></b-icon>添加选项</b-btn>
@@ -79,6 +82,22 @@
                 </b-list-group-item>
             </b-list-group>
         </div>
+
+        <div v-if="mode==4" label-size="lg" class="form-group-my">
+            <div class="col-form-label-lg">{{`${index}. ${selective.title} (${selective.maxscore}分)`}}</div>
+            <b-list-group :horizontal="!stacked" class="flex-column">
+                <b-list-group-item v-for="(value,index) in optionsComputed" :key="index" 
+                                :class="`list-item-${value.check}`"
+                                class="list-item border list-item-stack rounded" >
+                                {{value.text}}
+                                <div v-if="value.check === 2" style="float:right;display:inline-block" class="text-light">
+                                    <b-icon-circle></b-icon-circle>  正确答案
+                                </div>
+              
+                </b-list-group-item>
+            </b-list-group>
+        </div>
+
     </div>
 </template>
 <script>

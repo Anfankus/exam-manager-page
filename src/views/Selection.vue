@@ -1,13 +1,13 @@
 <template>
   <b-container class="select-wrapper">
     <b-col class="select-title">{{title}}</b-col>
-    <b-col cols="2" class="function-block">
-      <b-btn block variant="outline-success">新增考试</b-btn>
+    <b-col v-if="role==1" cols="2" class="function-block">
+      <b-btn block variant="outline-success" @click="addExam">新增考试</b-btn>
     </b-col>
     <b-col class="table-wrapper">
       <b-table hover :items="items" :fields="fields" @row-clicked="clickRow">
         <template v-slot:cell(index)="row">{{row.index+1}}</template>
-        <template v-slot:cell(date)="row">{{row.value.toLocaleString('chinese', { hour12: false })}}</template>
+        <template v-slot:cell(date)="row">{{row.value}}</template>
         <template v-slot:cell(status)="row">
           <div class="status-block" :class="statusEnum[row.value].class">{{statusEnum[row.value].label}}</div>
         </template>
@@ -28,74 +28,85 @@
   </b-container>
 </template>
 <script>
-class SelectionItem {
-  constructor(name, date, status, count, tip) {
-    this.name = name;
-    this.date = date;
-    this.status = status;
-    this.count = count;
-    this.tip = tip;
-  }
-}
+import Cookies from 'js-cookie'
+import moment from 'moment'
+import hash from 'hash.js'
 export default {
   name: "Selection",
-  created() {},
+  async created() {
+    let usertype = Cookies.get('usertype');
+    this.role=usertype;
+    this.examMeta = await this.axios.get("/exam-meta-list").then(ret=>ret.data).catch(e=>{
+      console.log("exam-meta-list error",e);
+      return {
+        'examid' :"",    
+        'examno' :"",    
+        'examname' :"",  
+        'starttime' :0, 
+        'examtime' :"",  
+        'description':"",
+        'totalscore' :"",
+        'sq' :"",        
+        'saq' :"",       
+        'userid' :"",    
+      }
+    });
+  },
   data() {
     return {
-        role:"student",
+      role:"student",
+      examMeta:[],
 
       title: "我的考试",
       fields: [
         { key: "index", label: "序号" },
         { key: "name", label: "考试名称" },
         { key: "date", label: "开始时间", sortable: true },
+        { key: "time", label: "考试时长(分钟)", sortable: true },
         { key: "status", label: "状态", sortable: true },
-        { key: "count", label: "参加人数", sortable: true },
         { key: "tip", label: "备注" },
         { key: "operation", label: "操作" }
       ],
-      items: [
-        {
-          ...new SelectionItem("第三次统考", new Date(), 2, 25, "需要补考")
-        },
-        {
-          ...new SelectionItem("第二次统考", new Date(), 0, 25, "需要补考")
-        },
-        {
-          ...new SelectionItem("第一次统考", new Date(), 1, 25, "需要补考")
-        },
-        {
-          ...new SelectionItem("第一次统考", new Date(), 3, 25, "需要补考")
-        }
-      ],
-
       statusEnums: {
-        student:{
+        0:{
             0: { label: "未开始", class: "status-ready", operations: [] },
-            1: { label: "正在进行", class: "status-pending", operations: [] },
-            2: { label: "已提交", class: "status-finished", operations: [0] },
+            1: { label: "正在进行", class: "status-pending", operations: [1] },
+            2: { label: "已结束", class: "status-finished", operations: [0] },
             3: { label: "已评分", class: "status-ended", operations: [0] }
         },
-        teacher:{
-            0: { label: "未开始", class: "status-ready", operations: [0, 1] },
-            1: { label: "正在进行", class: "status-pending", operations: [] },
-            2: { label: "已结束", class: "status-finished", operations: [0, 2] },
-            3: { label: "已阅卷", class: "status-ended", operations: [0] }
+        1:{
+            0: { label: "未开始", class: "status-ready", operations: [0, 1 ,2] },
+            1: { label: "正在进行", class: "status-pending", operations: [0] },
+            2: { label: "已结束", class: "status-finished", operations: [0,2, 3] },
+            3: { label: "已阅卷", class: "status-ended", operations: [0,2] }
         }
       },
       operationEnums: {
-        student:[
-            { label: "查看", func: this.deleteItem },
+        0:[
+            { label: "查看", func: this.checkItem },
+            { label: "开始作答", func: this.doItem }
         ],
-        teacher:[
-            { label: "删除", func: this.deleteItem },
+        1:[
+            { label: "查看", func: this.peekItem },
             { label: "修改", func: this.modifyItem },
+            { label: "删除", func: this.deleteItem },
             { label: "阅卷", func: this.reviewItem }
-            ]
+        ]
       }
     };
   },
   computed:{
+      items(){
+        return this.examMeta.map(each=>{
+          return {
+            name:each.examname,
+            date:moment.unix(each.starttime).format("YYYY/MM/DD HH:mm:ss"),
+            time:each.examtime,
+            status:this.itemStatus(each),
+            tip:each.description,
+          }
+        })
+      },
       statusEnum(){
           return this.statusEnums[this.role];
       },
@@ -104,21 +115,104 @@ export default {
       }
   },
   methods: {
+    itemStatus(examMeta){
+      let now = moment();
+      let starttime = moment.unix(examMeta.starttime);
+      let endtime = moment(starttime).add(examMeta.examtime,"m");
+      if(now < starttime){
+        return 0
+      }else if(now < endtime){
+        return 1
+      }else{
+        if(examMeta.flag)
+          return 3
+        else
+          return 2
+      }
+      
+    },
     clickRow(item) {
       console.log(item.name);
     },
-    deleteItem(index) {
-      console.log(index);
-      this.items.splice(index, 1);
+    addExam(){
+      let userid = Cookies.get('userid');
+      let hashed_id=hash.sha256().update(`${moment().unix()}`).update(userid).digest('hex');
+      console.log(hashed_id)
+      this.$router.push({
+        name:"paper",
+        params:{
+          id:hashed_id,
+          mode:0,
+          new:true
+          }
+        });
+    },
+    async deleteItem(index) {
+      let target = this.examMeta[index];
+      try{
+        let ret = await this.axios.delete("/delete-exam",{
+          params:{
+            examid:target.examid
+          }
+        });
+        if(ret.data.success){
+           this.examMeta.splice(index,1);
+        }else{
+          console.log(ret.data.msg);
+        }
+      }catch(e){
+        console.log(e);
+      }
     },
     modifyItem(index) {
-      console.log(index);
+      this.$router.push({
+        name:"paper",
+        params:{
+          id:this.examMeta[index].examid,
+          mode:0,
+          new:false
+        }
+      })
     },
     reviewItem(index) {
-      console.log(index);
+      this.$router.push({
+        name:"paper",
+        params:{
+          id:this.examMeta[index].examid,
+          mode:2,
+          new:false
+        }
+      })
     },
     checkItem(index){
-        console.log(`check ${index}`);
+      this.$router.push({
+        name:"paper",
+        params:{
+          id:this.examMeta[index].examid,
+          mode:3,
+          new:false
+        }
+      });
+    },
+    doItem(index){
+      this.$router.push({
+        name:"paper",
+        params:{
+          id:this.examMeta[index].examid,
+          mode:1,
+          new:false
+        }
+      })
+    },
+    peekItem(index){
+      this.$router.push({
+        name:"paper",
+        params:{
+          id:this.examMeta[index].examid,
+          mode:4,
+          new:false
+        }
+      })
     }
   }
 };

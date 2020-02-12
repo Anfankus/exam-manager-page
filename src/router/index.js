@@ -22,7 +22,7 @@ const routes = [
     component: () =>import(/* webpackChunkName: "select" */ '../views/Selection.vue')
   },
   {
-    path: '/paper/:id',
+    path: '/paper',
     name: 'paper',
     props:true,
     component:()=>import(/* webpackChunkName: "select" */ '../views/ExamPaper.vue')

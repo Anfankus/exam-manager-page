@@ -4,12 +4,13 @@
         <b-col col class="title-line"><span>注册</span></b-col>
         <b-form-row>
             <b-col lg=6 md=10 sm=12 tag="form" class="border center rounded shadow p-3" @submit="onSubmit">
-                <b-form-group label="用户名:" class="mt-2" label-for="usn">
-                    <b-form-input id='usn' required v-model="form.username" type="text" placeholder="输入用户名"/>
+                <b-form-group label="用户名:" class="mt-2" label-for="usi">
+                    <b-form-input id='usi' required v-model="form.userid" type="text" placeholder="输入用户名"/>
                 </b-form-group>
-                <b-form-group label="邮箱:" label-for="email">
-                  <b-form-input id="email" required v-model="form.email" type="email" placeholder="请输入邮箱"/>
+                <b-form-group label="姓名:" class="mt-2" label-for="usn">
+                    <b-form-input id='usn' required v-model="form.username" type="text" placeholder="输入姓名"/>
                 </b-form-group>
+
                 <b-form-group label="密码:" label-for="pwd">
                     <b-form-input id='pwd' required v-model="form.password" type="password" placeholder="请输入密码"/>
                 </b-form-group>
@@ -25,6 +26,9 @@
                     <b-form-invalid-feedback id="invalid">
                         输入密码不相符
                     </b-form-invalid-feedback>
+                </b-form-group>
+                <b-form-group label="身份">
+                    <b-select v-model="form.type" :options="selectOptions"></b-select>
                 </b-form-group>
                 <div v-if="result">
                   <b-alert style="height:2rem" :variant="result.ret?'success':'danger'" show>
@@ -51,11 +55,17 @@ export default {
     data(){
         return{
             form:{
+                userid:'',
                 username:'',
-                email:'',
                 password:'',
-                passwordr:''
+                passwordr:'',
+                type:''
             },
+            selectOptions:[
+                {value:'',text:"选择您的身份"},
+                {value:0,text:"学生"},
+                {value:1,text:"老师"}
+            ],
             result:null
         }
     },
@@ -68,26 +78,23 @@ export default {
       }
     },
     methods:{
-        checkFormat(){
-          let rule1=/^[a-zA-Z]+\w*$/,rule2=/^\w+$/;
-          let res=rule1.test(this.form.username)&&rule2.test(this.form.password);
-            if(res){
-                return true;
-            }else{
-                return false;
-            }
-        },
         async onSubmit(evt){
             this.result=null;
             evt.preventDefault();
-            if(!this.checkFormat()){
-              this.result={
-                ret:false,
-                msg:'用户名或密码格式有误'
-              }
-              return;
+            try{
+                let ret = await this.axios.post("/signup",{
+                        userid:this.form.userid,
+                        username:this.form.username,
+                        password:this.form.password,
+                        usertype:this.form.type,
+                    })
+                if(!ret.data.success)
+                    return;
+            }catch(ex){
+                console.log(ex);
+                return;
             }
-            location.replace('/')
+            this.$router.push({name:"signin"})
         }
     }
 }

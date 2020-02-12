@@ -16,8 +16,8 @@
    
         <b-row v-else-if="mode==1" >
             <b-col cols=12>
-                <b-form-group :label="`${index}. ${application.title} : ${application.answer} (${application.maxscore}分)`" label-size="lg" class="form-group">
-                    <b-form-textarea :id="`ques${index}`" v-model="application.answer" @change="onChanged" placeholder="请输出答案" 
+                <b-form-group :label="`${index}. ${application.title} : ${application.ret} (${application.maxscore}分)`" label-size="lg" class="form-group">
+                    <b-form-textarea :id="`ques${index}`" v-model="application.ret" @change="onChanged" placeholder="请输出答案" 
                                     rows="4" max-rows="8"></b-form-textarea>
                 </b-form-group>
             </b-col>
@@ -25,9 +25,8 @@
 
         <b-row v-else-if="mode==2" >
             <b-col cols=12>
-                <b-form-group :label="`${index}. ${application.title} : ${application.answer} (${application.maxscore}分)`" label-size="lg" class="form-group">
-                    <b-form-textarea :id="`ques${index}`" v-model="application.answer" @change="onChanged" placeholder="请输出答案" 
-                                    rows="4" max-rows="8" readonly></b-form-textarea>
+                <b-form-group :label="`${index}. ${application.title} (${application.maxscore}分)`" label-size="lg" class="form-group">
+                    <b-form-textarea :id="`ques${index}`" :value="application.ret" rows="4" max-rows="8" readonly></b-form-textarea>
                 </b-form-group>
             </b-col>
             <b-col cols="12">
@@ -39,18 +38,22 @@
 
         <b-row v-else-if="mode==3" >
             <b-col cols=12>
-                <b-form-group :label="`${index}. ${application.title} : ${application.answer} (${application.maxscore}分)`" label-size="lg" class="form-group">
-                    <b-form-textarea :id="`ques${index}`" v-model="application.answer" @change="onChanged" placeholder="请输出答案" 
+                <b-form-group :label="`${index}. ${application.title} (${application.maxscore}分)`" label-size="lg" class="form-group">
+                    <b-form-textarea :id="`ques${index}`" v-model="application.ret" @change="onChanged"
                                     rows="4" max-rows="8" readonly></b-form-textarea>
                 </b-form-group>
             </b-col>
             <b-col cols="2" class="text-center ml-2 py-1" style="font-size:1.1rem">我的得分</b-col>
-            <b-col cols="2" class="bg-success py-1 rounded text-light" style="font-size:1.1rem">10</b-col>
-                <!-- <b-form-group label-cols="1" label="我的得分:" :label-for="`QAppScore${index}`" label-align="center" >
-                    <b-form-input :id="`QAppScore${index}`" :value="application.score" type="number" number readonly style="width:10%" class="bg-success text-light text-center" />
-                </b-form-group>
-            </b-col> -->
+            <b-col cols="2" class="bg-success py-1 rounded text-light" style="font-size:1.1rem">{{application.score}}</b-col>
         </b-row>
+                <b-row v-else-if="mode==4" >
+            <b-col cols=12>
+                <b-form-group :label="`${index}. ${application.title} (${application.maxscore}分)`" label-size="lg" class="form-group">
+                    <b-form-textarea :id="`ques${index}`" value="" rows="4" max-rows="8" readonly></b-form-textarea>
+                </b-form-group>
+            </b-col>
+        </b-row>
+
     </div>
 </template>
 <script>
@@ -61,7 +64,7 @@ export default {
         event:"change"
     },
     props:{
-        application:Object, //{title,answer}
+        application:Object, //{title,ret}
         index:Number,
         mode:Number,
     },
@@ -70,7 +73,7 @@ export default {
             let ret={
                 ...this.application
             }
-            ret.answer=x;
+            ret.ret=x;
             this.$emit('change',ret);
         },
     }

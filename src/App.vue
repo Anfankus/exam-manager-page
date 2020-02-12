@@ -12,7 +12,7 @@
           <b-button size="sm" class="ml-1 mr-1" to="/signIn" v-show="!ifLogin">登陆</b-button>
           <b-button size="sm" to="/signUp" v-show="!ifLogin">注册</b-button>
           <b-nav-item-dropdown right v-show="ifLogin">
-            <template slot="button-content">我的</template>
+            <template slot="button-content">{{username}}</template>
             <b-dropdown-item href="#">我的试卷</b-dropdown-item>
             <b-dropdown-item href="#">购物车</b-dropdown-item>
           </b-nav-item-dropdown>
@@ -20,7 +20,7 @@
       </b-collapse>
     </b-navbar>
     <div class="view-wrapper">
-      <router-view ></router-view>
+      <router-view @signin="onSignin" ></router-view>
     </div>
     <div class="footer"></div>
   </div>
@@ -31,20 +31,16 @@ import Cookies from 'js-cookie'
 export default {
   data(){
     return{
-      showCart:false
+      ifLogin:false,
+      username:"",
+      userid:""
     }
   },
-  computed:{
-    username(){
-      return Cookies.get('user');
-    },
-    ifLogin(){
-      if(Cookies.get('user')){
-        return true;
-      }
-      else{
-        return false;
-      }
+  methods:{
+    onSignin(){
+      this.ifLogin=true;
+      this.username = Cookies.get("username");
+      this.userid = Cookies.get("userid");
     },
     
   }
