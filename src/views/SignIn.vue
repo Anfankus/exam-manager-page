@@ -65,7 +65,13 @@ export default {
                 Cookies.set('username',ret.data.username,{path:'/'});
 
             }catch(ex){
-                console.log(ex);
+                this.$bvToast.toast('登录错误', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
                 return
             }
             this.$emit("signin");

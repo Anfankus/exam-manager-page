@@ -88,9 +88,24 @@ export default {
                         password:this.form.password,
                         usertype:this.form.type,
                     })
-                if(!ret.data.success)
+                if(!ret.data.success){
+                    this.$bvToast.toast(`注册错误 ${ret.data.msg}`, {
+                        title: '提示',
+                        autoHideDelay: 5000,
+                        toaster: 'b-toaster-top-center',
+                        appendToast: true,
+                        variant:'warning'
+                    })
                     return;
+                }
             }catch(ex){
+                this.$bvToast.toast(`注册错误`, {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
                 console.log(ex);
                 return;
             }

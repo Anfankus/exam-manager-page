@@ -112,8 +112,25 @@ export default {
                 if(ret.data){
                     this.exam=ret.data;
                     this.examtimeString=moment.unix(this.exam.starttime).format("YYYY-MM-DDTHH:mm")
+                }else{
+                    this.$bvToast.toast('请求错误', {
+                        title: '提示',
+                        autoHideDelay: 5000,
+                        toaster: 'b-toaster-top-center',
+                        appendToast: true,
+                        variant:'warning'
+                    })
                 }
-            }).catch(console.log)
+            }).catch(e=>{
+                this.$bvToast.toast('请求错误', {
+                title: '提示',
+                autoHideDelay: 5000,
+                toaster: 'b-toaster-top-center',
+                appendToast: true,
+                variant:'warning'
+                })
+                console.log(e)
+            })
         }else{
             this.exam={
                 examid:this.id,
@@ -163,7 +180,16 @@ export default {
                 params:{examid:this.exam.examid}
             }).then(e=>{
                 this.solutionList=e.data;
-            }).catch(console.log)
+            }).catch(err=>{
+                this.$bvToast.toast('列表请求错误', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
+                console.log(err)
+            })
             await Promise.all(this.solutionList.map(e=>{
                 return this.axios.get("/user",{
                     params:{userid:e.userid}
@@ -172,6 +198,13 @@ export default {
                 this.examerList=ret;
             }).catch(err=>{
                 console.log("err",err)
+                this.$bvToast.toast('请求错误', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
             })
             if(this.examerList.length){
                 this.ready=true;
@@ -189,20 +222,42 @@ export default {
                     examid:this.exam.examid
                 }
             }).then(({data})=>{
-                this.exam.sq.forEach((v,i)=>{
-                    this.$set(v,'ret',data.answer.sq[i])
+                if(data){
+                    this.exam.sq.forEach((v,i)=>{
+                        this.$set(v,'ret',data.answer.sq[i])
+                    })
+                    this.exam.saq.forEach((v,i)=>{
+                        this.$set(v,'ret',data.answer.saq[i])
+                    })
+                    return data.solutionid
+                }else{
+                    throw new Error("未找到数据")
+                }
+            }).catch(err=>{
+                this.$bvToast.toast('请求错误', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
                 })
-                this.exam.saq.forEach((v,i)=>{
-                    this.$set(v,'ret',data.answer.saq[i])
-                })
-                return data.solutionid
-            }).catch(console.log);
+                console.log(err)
+            });
             await this.axios.get("/score",{params:{solutionid}}).then(({data})=>{
                 this.exam.saq.forEach((v,i)=>{
                     this.$set(v,'score',data.value.saq[i])
                 })
                 this.score = data;
                 this.ready=true;
+            }).catch(err=>{
+                this.$bvToast.toast('请求错误', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
+                console.log(err)
             })
         }else if(this.mode ==4){
             this.ready=true;
@@ -213,7 +268,18 @@ export default {
             // mode:null,  //0:编辑试卷 1:考试 2:查看试卷(判卷) 3:查看试卷(已作答)
 
             //试卷数据
-            exam:{},
+            exam:{
+                examid:"",
+                examno:"",
+                examname:"",
+                examtime:0,
+                starttime:"",
+                totalscore:"",
+                sq:[],
+                saq:[],
+                userid:"",
+                description:""
+            },
             //考试者信息
             examer:{},
             //判卷列表
@@ -305,9 +371,24 @@ export default {
             await this.axios.post("/new-exam",param).then(e=>{
                 if(e.data.success){
                     this.$router.push({name:"select"});
+                }else{
+                    this.$bvToast.toast('创建失败', {
+                        title: '提示',
+                        autoHideDelay: 5000,
+                        toaster: 'b-toaster-top-center',
+                        appendToast: true,
+                        variant:'warning'
+                    })
                 }
             }).catch(e=>{
                 console.log(e);
+                this.$bvToast.toast('发布失败', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
             });
         },
         async onSubmit(){
@@ -325,9 +406,24 @@ export default {
             await this.axios.post("/submit-solution",solution).then(e=>{
                 if(e.data.success){
                     this.$router.push({name:"select"});
+                }else{
+                    this.$bvToast.toast('发布失败', {
+                        title: '提示',
+                        autoHideDelay: 5000,
+                        toaster: 'b-toaster-top-center',
+                        appendToast: true,
+                        variant:'warning'
+                    })
                 }
             }).catch(e=>{
                 console.log(e);
+                this.$bvToast.toast('提交失败', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
             })
         },
         async onScore(){
@@ -348,8 +444,25 @@ export default {
             await this.axios.post("/new-score",score).then(({data})=>{
                 if(data.success){
                     this.nextPaper();
+                }else{
+                    this.$bvToast.toast(`提交失败：${data.msg}`, {
+                        title: '提示',
+                        autoHideDelay: 5000,
+                        toaster: 'b-toaster-top-center',
+                        appendToast: true,
+                        variant:'warning'
+                    })
                 }
-            }).catch(console.log)
+            }).catch(err=>{
+                this.$bvToast.toast('发布失败', {
+                    title: '提示',
+                    autoHideDelay: 5000,
+                    toaster: 'b-toaster-top-center',
+                    appendToast: true,
+                    variant:'warning'
+                })
+                console.log(err)
+            })
         },
         onClose(){
             this.$router.push({name:"select"})

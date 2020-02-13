@@ -36,8 +36,17 @@ export default {
   async created() {
     let usertype = Cookies.get('usertype');
     this.role=usertype;
-    this.examMeta = await this.axios.get("/exam-meta-list").then(ret=>ret.data).catch(e=>{
-      console.log("exam-meta-list error",e);
+    this.examMeta = await this.axios.get("/exam-meta-list",{
+      params:{userid:Cookies.get("userid")}
+    }).then(ret=>ret.data).catch(e=>{
+      console.log(e)
+      this.$bvToast.toast('请求错误', {
+        title: '提示',
+        autoHideDelay: 5000,
+        toaster: 'b-toaster-top-center',
+        appendToast: true,
+        variant:'warning'
+      })
       return {
         'examid' :"",    
         'examno' :"",    
@@ -158,9 +167,22 @@ export default {
         if(ret.data.success){
            this.examMeta.splice(index,1);
         }else{
-          console.log(ret.data.msg);
+          this.$bvToast.toast('删除失败', {
+            title: '提示',
+            autoHideDelay: 5000,
+            toaster: 'b-toaster-top-center',
+            appendToast: true,
+            variant:'warning'
+          })
         }
       }catch(e){
+        this.$bvToast.toast('请求错误', {
+          title: '提示',
+          autoHideDelay: 5000,
+          toaster: 'b-toaster-top-center',
+          appendToast: true,
+          variant:'warning'
+        })
         console.log(e);
       }
     },

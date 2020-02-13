@@ -6,13 +6,14 @@ import axios from 'axios'
 
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
+import {config} from "../app.config"
 
 Vue.config.productionTip = false
 Vue.use(BootstrapVue)
 Vue.use(BootstrapVueIcons)
 
 let Axios = axios.create({
-  baseURL: 'http://localhost:8045',
+  baseURL: `http://${config.server.host}:${config.server.port}`,
 })
 
 Vue.prototype.axios=Axios;
