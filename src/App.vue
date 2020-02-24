@@ -11,11 +11,8 @@
           </b-nav-form>
           <b-button size="sm" class="ml-1 mr-1" to="/signIn" v-show="!ifLogin">登陆</b-button>
           <b-button size="sm" to="/signUp" v-show="!ifLogin">注册</b-button>
-          <b-nav-item-dropdown right v-show="ifLogin">
-            <template slot="button-content">{{username}}</template>
-            <b-dropdown-item href="#">我的试卷</b-dropdown-item>
-            <b-dropdown-item href="#">购物车</b-dropdown-item>
-          </b-nav-item-dropdown>
+          <b-button size="sm" v-show="ifLogin" @click="signOut">登出</b-button>
+          <b-button size="sm" variant="danger" v-show="ifLogin">{{username}}</b-button>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -42,6 +39,12 @@ export default {
       this.username = Cookies.get("username");
       this.userid = Cookies.get("userid");
     },
+    signOut(){
+      Cookies.remove('username')
+      Cookies.remove('userid')
+      Cookies.remove('usertype')
+      this.$router.push({name:'signin'})
+    }
     
   }
 }
