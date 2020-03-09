@@ -37,7 +37,7 @@ export default {
     let usertype = Cookies.get('usertype');
     this.role=usertype;
     this.examMeta = await this.axios.get("/exam-meta-list",{
-      params:{userid:Cookies.get("userid")}
+      params:{userid:""}
     }).then(ret=>ret.data).catch(e=>{
       console.log(e)
       this.$bvToast.toast('请求错误', {
