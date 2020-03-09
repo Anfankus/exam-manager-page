@@ -90,7 +90,7 @@ export default {
   border-top: 1px solid #dddddd;
   height: 5vh; 
   min-height: 10px;
-  background-color: #eee;
+  background-color: rgb(238, 238, 238);
 }
 
 .slide-fade-enter-active {

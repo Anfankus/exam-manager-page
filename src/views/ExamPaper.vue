@@ -169,7 +169,7 @@ export default {
                 this.passedSecond = moment.duration(this.currentDate.diff(beginDate)).asSeconds();
                 
                 if(this.currentDate >=this.endDate){
-                    console.log("interval end");
+                    this.endExam();
                     clearInterval(this.intervalHandle);
                     this.intervalHandle = null;
                 }
@@ -215,6 +215,7 @@ export default {
                 username:Cookies.get("username"),
                 userid:Cookies.get("userid")
             }
+            let step=0;
 
             let solutionid = await this.axios.get("/solution",{
                 params:{
@@ -229,9 +230,8 @@ export default {
                     this.exam.saq.forEach((v,i)=>{
                         this.$set(v,'ret',data.answer.saq[i])
                     })
+                    step =1;
                     return data.solutionid
-                }else{
-                    throw new Error("未找到数据")
                 }
             }).catch(err=>{
                 this.$bvToast.toast('请求错误', {
@@ -242,23 +242,26 @@ export default {
                     variant:'warning'
                 })
                 console.log(err)
+                return;
             });
-            await this.axios.get("/score",{params:{solutionid}}).then(({data})=>{
-                this.exam.saq.forEach((v,i)=>{
-                    this.$set(v,'score',data.value.saq[i])
+            if(step===1){
+                await this.axios.get("/score",{params:{solutionid}}).then(({data})=>{
+                    this.exam.saq.forEach((v,i)=>{
+                        this.$set(v,'score',data.value.saq[i])
+                    })
+                    this.score = data;
+                    this.ready=true;
+                }).catch(err=>{
+                    this.$bvToast.toast('请求错误', {
+                        title: '提示',
+                        autoHideDelay: 5000,
+                        toaster: 'b-toaster-top-center',
+                        appendToast: true,
+                        variant:'warning'
+                    })
+                    console.log(err)
                 })
-                this.score = data;
-                this.ready=true;
-            }).catch(err=>{
-                this.$bvToast.toast('请求错误', {
-                    title: '提示',
-                    autoHideDelay: 5000,
-                    toaster: 'b-toaster-top-center',
-                    appendToast: true,
-                    variant:'warning'
-                })
-                console.log(err)
-            })
+            }
         }else if(this.mode ==4){
             this.ready=true;
         }
@@ -391,6 +394,9 @@ export default {
                 })
             });
         },
+        async endExam(){
+            await this.onSubmit()
+        },
         async onSubmit(){
             let solution = {
                 examid:this.id,
@@ -407,7 +413,7 @@ export default {
                 if(e.data.success){
                     this.$router.push({name:"select"});
                 }else{
-                    this.$bvToast.toast('发布失败', {
+                    this.$bvToast.toast('提交失败', {
                         title: '提示',
                         autoHideDelay: 5000,
                         toaster: 'b-toaster-top-center',
@@ -426,6 +432,7 @@ export default {
                 })
             })
         },
+        
         async onScore(){
             let score = {
                 scoreid:hash.sha256().update(this.solutionList[this.solutionIndex].solutionid).update(this.id).update(this.examer.userid).digest('hex'),
